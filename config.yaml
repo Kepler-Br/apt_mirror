@@ -1,0 +1,13 @@
+config:
+  connections: 1
+  max_speed: 1MB
+
+repositories:
+  - name: amnezia
+    type: deb
+    url: https://intra.sat13.space:27126/bded620c11b313bf0a/deb/ubuntu/noble
+    components: main
+    distribution: noble
+    architectures: amd64
+    sources: false
+    output: ../test_dir/repos/ubuntu
