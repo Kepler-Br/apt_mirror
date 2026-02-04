@@ -21,9 +21,12 @@ class AptMirrorer(Mirrorer):
         self.downloader = downloader
 
     def run(self, repo_config: RepositoryConfig):
+        release_file_url = repo_config.url_to_distr_file(
+            "Release"
+        )
         release_file = (
-            self.downloader.get("dists", repo_config.distribution, "Release")
-            .unwrap("Unable to get Release file. Code:", True)
+            self.downloader.get_url(release_file_url)
+            .unwrap(lambda x: f"Unable to get Release file. Code: {x}")
             .decode()
         )
         parsed_release_file = parse_release(release_file)
@@ -34,6 +37,12 @@ class AptMirrorer(Mirrorer):
             raise RuntimeError("Not all architectures are present in Release file")
         if not has_comp:
             raise RuntimeError("Not all components are present in Release file")
+        self._mirror_component(
+            component="main",
+            arch="amd64",
+            repo_config=repo_config,
+            release_file=parsed_release_file,
+        )
 
     def _create_repo_root(self, repo_config: RepositoryConfig, *args: str):
         pth = Path(repo_config.output)
@@ -48,19 +57,21 @@ class AptMirrorer(Mirrorer):
     ):
         if repo_config.sources:
             raise RuntimeError("Sources are not supported yet")
+        packages_url = repo_config.url_to_distr_file(
+            component, f"binary-{arch}", "Packages.gz"
+        )
+
         packages_path = f"{component}/binary-{arch}/Packages.gz"
         has_packages = release_file.has_file(packages_path)
         if not has_packages:
             raise RuntimeError(
                 f"Could not find packages file: {packages_path} for repo {repo_config.name}"
             )
-        packages_binary = self.downloader.get(
-            component, f"binary-{arch}", "Packages.gz"
-        ).unwrap(
-            f"Could not get Packages.gz file for repo {repo_config.name}",
-            include_error_value=True,
+        packages_binary = self.downloader.get_url(packages_url).unwrap(
+            lambda x: f"Could not get Packages.gz file for repo {repo_config.name}. {x}",
         )
         packages = parse_packages_gz(packages_binary)
         for package in packages:
             filepath = package.filename
-        pass
+            filepath = repo_config.path_to_file(filepath)
+            print(filepath)

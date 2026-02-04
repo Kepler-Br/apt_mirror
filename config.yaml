@@ -1,6 +1,7 @@
 config:
   connections: 1
   max_speed: 1MB
+  user_agent: Aptly
 
 repositories:
   - name: amnezia

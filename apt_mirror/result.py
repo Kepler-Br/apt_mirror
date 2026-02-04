@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Optional, TypeVar
+from typing import Any, Callable, Optional, TypeVar
 
 
 _K = TypeVar("_K")
@@ -20,14 +20,12 @@ class Result[_K, _V]:
         return Result(value=None, error=err)
 
     def unwrap(
-        self, msg_on_err: Optional[str] = None, include_error_value: bool = False
+        self, msg_on_err: Optional[Callable[[_V], str]] = None
     ) -> _K:
         if self.error is not None or self.value is None:
             error_string = "Unwrapped Result with error"
             if msg_on_err is not None:
-                error_string += msg_on_err
-            if include_error_value:
-                error_string += f". {self.error}"
-            raise RuntimeError("Unwrapped Result with error")
+                error_string += msg_on_err(self.error) # type: ignore
+            raise RuntimeError(error_string)
 
         return self.value

@@ -1,10 +1,10 @@
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 import yaml
 
-from apt_mirror.tools import join_url
+from tools import join_url
 
 
 @dataclass(frozen=True)
@@ -18,20 +18,24 @@ class RepositoryConfig:
     sources: bool
     output: str
 
-    def path_to_file(self, file: str) -> str:
-        return str(Path(self.output).joinpath(file))
-    
+    def path_to_file(self, *args: str) -> str:
+        return str(Path(self.output).joinpath(*args))
+
     def url_to_file(self, *args: str) -> str:
         return join_url(self.url, *args)
 
-    def url_to_file_component(self, distribution: str, arch: str, component: str) -> str:
-        return join_url(self.url, "dists", distribution, )
+    def url_to_distr_file(self, component: Optional[str], *args: str) -> str:
+        if component is not None:
+            return join_url(self.url, "dists", self.distribution, component, *args)
+
+        return join_url(self.url, "dists", self.distribution, *args)
 
 
 @dataclass(frozen=True)
 class MirrorProgramConfig:
     connections: int
     max_speed_bytes: int
+    user_agent: str
 
 
 @dataclass(frozen=True)
@@ -62,6 +66,7 @@ def get_config(path: str) -> MirrorConfig:
     cfg = MirrorProgramConfig(
         connections=int(program_config["connections"]),
         max_speed_bytes=int(program_config["max_speed"].replace("MB", "")),
+        user_agent=program_config["user_agent"],
     )
 
     return MirrorConfig(config=cfg, repositories=loaded_repos)

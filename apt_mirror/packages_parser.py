@@ -38,10 +38,13 @@ def _validate_package_entry(val: PackageEntry):
 
 def parse_packages_gz(packages_gz: bytes) -> List[PackageEntry]:
     decompressed = gzip.decompress(packages_gz)
+    return parse_packages(decompressed)
 
+
+def parse_packages(packages: bytes) -> List[PackageEntry]:
     entries: List[PackageEntry] = []
     current_package_entry: PackageEntry = PackageEntry()
-    for line in decompressed.splitlines():
+    for line in packages.splitlines():
         decoded_line = line.decode()
         splitted_line = decoded_line.split(": ", maxsplit=1)
         # Entry: value

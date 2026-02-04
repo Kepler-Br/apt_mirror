@@ -38,17 +38,11 @@ def main():
     parsed = create_parser().parse_args()
 
     config = get_config("./../config.yaml")
-    downloader = RequestsDownloader(config.repositories[0].url)
-    mirrorer = AptMirrorer(downloader, config.repositories[0])
+    downloader = RequestsDownloader(config.repositories[0].url, config.config.user_agent)
+    mirrorer = AptMirrorer(downloader)
 
-    mirrorer.run()
-
-    pass
+    mirrorer.run(config.repositories[0])
 
 
 if __name__ == "__main__":
-    archs = set("amd64 arm64 armhf i386 ppc64el riscv64 s390x".split())
-    has_all = set("amd64 i386".split())
-    inter = has_all.intersection(archs)
-    print(inter)
-    # main()
+    main()
